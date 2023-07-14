@@ -2,6 +2,10 @@ import os
 import boto3
 import pathlib
 
+# S3
+client = boto3.client("s3")
+s3 = boto3.resource("s3")
+bucket_name = "stable-diffusion-s3bucket"
 
 # Info for generator
 additional_prompt = " recipe photo, professional photo, restaurant like," \
@@ -28,3 +32,32 @@ def generate_image(image_name: str, additional_prompt: str = additional_prompt) 
     executed = os.system(command)
     
     return file_name
+
+
+def save_file_to_bucket(file_name: str, path_to_file: str = full_outputs_path, bucket_name: str = bucket_name) -> bool:
+    """
+    Saves file to S3 bucket.
+    Used only for saving images from generate_image().
+    Return: True if successfully saved.
+    """
+    path_to_file = f"/{path_to_file}/{file_name}/samples/00000.png"
+    uploaded = client.upload_file(path_to_file, bucket_name, f"{file_name}.png")
+    
+    if uploaded != None:
+        return False
+    
+    return True
+
+
+def get_file_url(file_name: str, expiration: int = 3600) -> str:
+    """
+    Generates url to access the file on the S3 bucket.
+    Return: url to the file on S3 bucket.
+    """
+    url = client.generate_presigned_url(
+        ClientMethod="get_object",
+        Params={"Bucket": bucket_name, "Key": file_name},
+        ExpiresIn=expiration
+    )
+    
+    return url
