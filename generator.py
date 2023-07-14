@@ -61,3 +61,25 @@ def get_file_url(file_name: str, expiration: int = 3600) -> str:
     )
     
     return url
+
+
+def delete_file(path_to_file: pathlib.Path) -> bool:
+    """
+    Deletes a file/directory by absolute path.
+    Return: True if the file exists.
+    """
+    if os.path.exists(path_to_file):
+        for sub in path_to_file.iterdir():
+            if sub.is_dir():
+                delete_file(sub)
+            else:
+                sub.unlink()
+    
+        path_to_file.rmdir()
+        
+        return True
+    
+    else:
+        print(f"The file {path_to_file} does not exist")
+        
+        return False 
